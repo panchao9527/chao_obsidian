@@ -61,5 +61,29 @@ pandas 性能不足 → Polars
 Spark/湖仓/ETL → PySpark
 ```
 
+## 如何阅读教程里的代码注释
+
+Python 使用 `#` 表示注释，`#` 后面的文字只用于说明，不会被执行：
+
+```python
+# 导入 pandas，并按社区习惯简写为 pd
+import pandas as pd
+
+# 创建一张只有两行数据的表
+data = pd.DataFrame({"id": [1, 2]})
+
+# assert 表示断言：条件为 False 时，测试立即失败
+assert len(data) == 2
+```
+
+PowerShell 也使用 `#` 写注释：
+
+```powershell
+# 将库安装到当前 Python 环境
+python -m pip install pandas
+```
+
+阅读示例时建议按“准备数据 → 执行动作 → 获取结果 → 断言结果”的顺序理解。注释解释的是代码意图；真正运行时仍要替换示例地址、文件名和测试账号。
+
 > [!warning] 结论边界
 > Mock 通过不是集成通过；Schema 通过不是业务成功；本地数据核对不是生产验收；性能脚本能运行也不代表具备压测授权。

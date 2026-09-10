@@ -16,6 +16,7 @@ responses 专门拦截 Python `requests` 发出的 HTTP 请求，适合单元测
 ## 2. 安装
 
 ```powershell
+# 安装专门针对 requests 的 HTTP Mock 库
 python -m pip install responses
 ```
 
@@ -28,13 +29,16 @@ import responses
 
 @responses.activate
 def test_query_user():
+    # 注册一条模拟规则：访问该 URL 时返回下面的 JSON 和状态码
     responses.get(
         "https://example.test/users/1",
         json={"id": 1, "name": "alice"},
         status=200,
     )
 
+    # 代码看起来仍在发请求，但请求会被 responses 拦截
     response = requests.get("https://example.test/users/1", timeout=10)
+    # 验证客户端正确解析了模拟响应
     assert response.json()["name"] == "alice"
 ```
 
@@ -43,14 +47,17 @@ def test_query_user():
 ```python
 @responses.activate
 def test_create_user():
+    # 预设创建成功后的服务端响应
     responses.post("https://example.test/users", json={"id": 10}, status=201)
 
+    # 调用被测 HTTP 客户端
     response = requests.post(
         "https://example.test/users",
         json={"name": "alice"},
         timeout=10,
     )
 
+    # 既检查响应，也检查实际发送了几次、请求体是什么
     assert response.status_code == 201
     assert len(responses.calls) == 1
     assert b'"name": "alice"' in responses.calls[0].request.body
@@ -61,11 +68,13 @@ def test_create_user():
 ```python
 @responses.activate
 def test_timeout():
+    # 请求该地址时直接抛出 requests.Timeout
     responses.get(
         "https://example.test/slow",
         body=requests.Timeout("timeout"),
     )
 
+    # 验证调用方能收到超时异常
     with pytest.raises(requests.Timeout):
         requests.get("https://example.test/slow", timeout=1)
 ```

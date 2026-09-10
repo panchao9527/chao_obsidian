@@ -21,27 +21,36 @@ Testcontainers 在测试期间启动临时 Docker 容器，例如 PostgreSQL、M
 - 镜像源、代理和磁盘空间可用。
 
 ```powershell
+# 确认 Docker 客户端和服务端均可访问
 docker version
+# 安装 Testcontainers 基础包
 python -m pip install testcontainers
 ```
 
 ## 3. PostgreSQL 示例
 
 ```python
+# PostgresContainer 负责启动和停止 PostgreSQL 容器
 from testcontainers.postgres import PostgresContainer
 from sqlalchemy import create_engine, text
 
 
 def test_database_round_trip():
+    # 进入 with 时启动容器，离开时自动停止并清理
     with PostgresContainer("postgres:17") as postgres:
+        # 从容器获取临时连接串并创建 SQLAlchemy Engine
         engine = create_engine(postgres.get_connection_url())
+        # begin 会开启事务，正常结束时提交
         with engine.begin() as connection:
+            # 创建测试表并使用参数绑定插入测试数据
             connection.execute(text("CREATE TABLE users (id INT, name TEXT)"))
             connection.execute(
                 text("INSERT INTO users VALUES (:id, :name)"),
                 {"id": 1, "name": "alice"},
             )
+            # scalar_one 要求查询必须且只能返回一个值
             actual = connection.execute(text("SELECT name FROM users WHERE id=1")).scalar_one()
+        # 验证数据能从临时数据库正确读回
         assert actual == "alice"
 ```
 
@@ -54,7 +63,9 @@ from testcontainers.postgres import PostgresContainer
 
 @pytest.fixture(scope="session")
 def postgres_url():
+    # 整次 pytest 会话只启动一次容器，减少启动时间
     with PostgresContainer("postgres:17") as container:
+        # yield 将连接串提供给测试；全部测试结束后退出 with 并清理容器
         yield container.get_connection_url()
 ```
 

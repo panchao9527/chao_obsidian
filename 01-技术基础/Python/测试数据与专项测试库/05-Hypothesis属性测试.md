@@ -16,31 +16,34 @@ level: intermediate
 ## 2. 安装
 
 ```powershell
+# 安装属性测试库
 python -m pip install hypothesis
 ```
 
 ## 3. 第一个测试
 
 ```python
+# given 负责把生成的数据传给测试函数，strategies 定义数据范围
 from hypothesis import given, strategies as st
 
 
 @given(st.integers(), st.integers())
 def test_addition_commutative(left, right):
+    # 无论生成什么整数，交换加数顺序后结果都应相同
     assert left + right == right + left
 ```
 
 ## 4. 常用策略
 
 ```python
-st.integers(min_value=0, max_value=100)
-st.floats(allow_nan=False, allow_infinity=False)
-st.text(min_size=1, max_size=50)
-st.booleans()
-st.none()
-st.lists(st.integers(), max_size=20)
-st.dictionaries(st.text(min_size=1), st.integers(), max_size=10)
-st.one_of(st.none(), st.text())
+st.integers(min_value=0, max_value=100)              # 0 到 100 的整数
+st.floats(allow_nan=False, allow_infinity=False)     # 排除 NaN 和无穷值的小数
+st.text(min_size=1, max_size=50)                     # 1 到 50 字符的字符串
+st.booleans()                                        # True 或 False
+st.none()                                            # 只生成 None
+st.lists(st.integers(), max_size=20)                 # 最多 20 个整数的列表
+st.dictionaries(st.text(min_size=1), st.integers(), max_size=10)  # 字典
+st.one_of(st.none(), st.text())                      # None 或字符串
 ```
 
 ## 5. 测试数据转换
@@ -48,7 +51,9 @@ st.one_of(st.none(), st.text())
 ```python
 @given(st.text())
 def test_normalize_never_has_outer_spaces(value):
+    # 把自动生成的任意 Unicode 字符串交给被测函数
     result = normalize(value)
+    # 归一化后的结果不允许保留首尾空格
     assert result == result.strip()
 ```
 
@@ -57,6 +62,7 @@ def test_normalize_never_has_outer_spaces(value):
 ```python
 @st.composite
 def users(draw):
+    # draw 从指定策略中取出一条本次测试数据
     return {
         "name": draw(st.text(min_size=1, max_size=30)),
         "age": draw(st.integers(min_value=18, max_value=65)),
@@ -65,6 +71,7 @@ def users(draw):
 
 @given(users())
 def test_user_payload(user):
+    # Hypothesis 会尝试多组满足策略的用户对象
     assert 18 <= user["age"] <= 65
 ```
 

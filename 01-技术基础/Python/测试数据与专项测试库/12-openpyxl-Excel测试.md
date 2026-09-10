@@ -16,17 +16,22 @@ openpyxl 用于读取和写入 `.xlsx` 文件，适合验证工作表、单元�
 ## 2. 安装
 
 ```powershell
+# 安装 xlsx 文件读写库
 python -m pip install openpyxl
 ```
 
 ## 3. 读取工作簿
 
 ```python
+# load_workbook 用于打开已有 xlsx 文件
 from openpyxl import load_workbook
 
+# data_only=False 表示读取公式本身，而不是公式缓存结果
 workbook = load_workbook("report.xlsx", data_only=False)
+# 先检查目标工作表是否存在
 assert "Summary" in workbook.sheetnames
 
+# 按工作表名称取出 Sheet 对象
 sheet = workbook["Summary"]
 assert sheet["A1"].value == "测试报告"
 assert sheet.max_row >= 2
@@ -37,9 +42,11 @@ assert sheet.max_row >= 2
 ## 4. 遍历数据
 
 ```python
+# values_only=True 只返回单元格值，不返回 Cell 对象
 rows = list(sheet.iter_rows(min_row=2, values_only=True))
 assert rows
 
+# 按列顺序解包每一行
 for order_id, amount, status in rows:
     assert order_id is not None
     assert amount >= 0
@@ -49,8 +56,11 @@ for order_id, amount, status in rows:
 ## 5. 验证样式和合并
 
 ```python
+# 检查标题是否加粗
 assert sheet["A1"].font.bold is True
+# 检查单元格是否有填充样式
 assert sheet["A1"].fill.fill_type is not None
+# 将所有合并区域转成字符串后检查 A1:C1
 assert "A1:C1" in {str(item) for item in sheet.merged_cells.ranges}
 ```
 
@@ -59,11 +69,14 @@ assert "A1:C1" in {str(item) for item in sheet.merged_cells.ranges}
 ```python
 from openpyxl import Workbook
 
+# 创建新工作簿；默认自带一张工作表
 workbook = Workbook()
 sheet = workbook.active
+# 修改工作表名称并逐行追加内容
 sheet.title = "Results"
 sheet.append(["case", "status"])
 sheet.append(["test_login", "PASSED"])
+# 保存到当前工作目录
 workbook.save("results.xlsx")
 ```
 

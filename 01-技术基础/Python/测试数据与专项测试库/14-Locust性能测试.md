@@ -19,6 +19,7 @@ Locust 使用 Python 描述并发用户行为，可通过 Web UI 或无头模式
 ## 2. 安装
 
 ```powershell
+# 安装 Locust 并确认命令可用
 python -m pip install locust
 locust --version
 ```
@@ -26,12 +27,16 @@ locust --version
 ## 3. 第一个 locustfile.py
 
 ```python
+# HttpUser 表示使用 HTTP 客户端的虚拟用户
+# task 标记用户会重复执行的业务动作
 from locust import HttpUser, between, task
 
 
 class ApiUser(HttpUser):
+    # 每个任务之间随机等待 1 到 3 秒，模拟用户思考时间
     wait_time = between(1, 3)
 
+    # 权重 3：相对于权重 1 的任务，执行频率约为 3 倍
     @task(3)
     def query_users(self):
         self.client.get("/api/users", name="GET /api/users")
@@ -44,6 +49,7 @@ class ApiUser(HttpUser):
 启动：
 
 ```powershell
+# 启动 Locust Web UI，并把相对请求路径拼到 host 后
 locust -f locustfile.py --host https://example.test
 ```
 
@@ -52,6 +58,7 @@ locust -f locustfile.py --host https://example.test
 ## 4. 无头运行
 
 ```powershell
+# 无头模式适合 CI：20 个用户，每秒启动 2 个，持续 2 分钟
 locust -f locustfile.py `
   --host https://example.test `
   --headless `
@@ -68,11 +75,14 @@ HTTP 200 也可能业务失败：
 ```python
 @task
 def query_tasks(self):
+    # catch_response=True 允许根据业务正文手动判定成功或失败
     with self.client.get("/api/tasks", catch_response=True) as response:
+        # 先检查 HTTP 状态
         if response.status_code != 200:
             response.failure(f"HTTP {response.status_code}")
             return
 
+        # 再解析 JSON 并检查业务 code
         body = response.json()
         if body.get("code") != 0:
             response.failure(f"business code={body.get('code')}")
@@ -86,6 +96,7 @@ import os
 
 class ApiUser(HttpUser):
     def on_start(self):
+        # on_start 在每个虚拟用户开始运行时执行一次
         response = self.client.post(
             "/api/login",
             json={
@@ -93,6 +104,7 @@ class ApiUser(HttpUser):
                 "password": os.environ["PERF_PASSWORD"],
             },
         )
+        # 取出 Token 后写入当前虚拟用户的公共请求头
         token = response.json()["token"]
         self.client.headers.update({"Authorization": f"Bearer {token}"})
 ```

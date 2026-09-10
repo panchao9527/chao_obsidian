@@ -16,13 +16,16 @@ Schemathesis 根据 OpenAPI/GraphQL Schema 自动生成请求，探索边界输�
 ## 2. 安装
 
 ```powershell
+# 安装命令行和 Python 运行时
 python -m pip install schemathesis
+# 查看当前版本支持的完整参数
 schemathesis --help
 ```
 
 ## 3. 命令行运行
 
 ```powershell
+# 根据远程 OpenAPI 文档自动生成并运行测试请求
 schemathesis run https://example.test/openapi.json
 ```
 

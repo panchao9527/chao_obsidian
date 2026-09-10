@@ -16,6 +16,7 @@ pytest-mock 提供 `mocker` fixture，包装标准库 `unittest.mock`，用于�
 ## 2. 安装
 
 ```powershell
+# 安装后 pytest 会自动提供 mocker fixture
 python -m pip install pytest-mock
 ```
 
@@ -24,10 +25,12 @@ python -m pip install pytest-mock
 假设 `service.py`：
 
 ```python
+# service.py 导入真实支付网关模块
 import payment_gateway
 
 
 def pay(order_id: int):
+    # 将订单号传给第三方支付网关
     return payment_gateway.charge(order_id)
 ```
 
@@ -35,10 +38,13 @@ def pay(order_id: int):
 
 ```python
 def test_pay(mocker):
+    # 替换 service 模块当前使用的 charge，并指定模拟返回值
     charge = mocker.patch("service.payment_gateway.charge", return_value={"status": "SUCCESS"})
 
+    # 调用被测函数；此时不会访问真实支付网关
     result = pay(1001)
 
+    # 验证返回结果和第三方调用参数
     assert result["status"] == "SUCCESS"
     charge.assert_called_once_with(1001)
 ```
@@ -49,11 +55,13 @@ def test_pay(mocker):
 
 ```python
 def test_payment_timeout(mocker):
+    # side_effect 表示调用 Mock 时抛出指定异常
     mocker.patch(
         "service.payment_gateway.charge",
         side_effect=TimeoutError("gateway timeout"),
     )
 
+    # 验证被测函数确实向上抛出了超时
     with pytest.raises(TimeoutError):
         pay(1001)
 ```
@@ -61,8 +69,10 @@ def test_payment_timeout(mocker):
 ## 5. Spy
 
 ```python
+# spy 保留真实调用，同时记录调用次数和参数
 spy = mocker.spy(service, "calculate_total")
 result = service.create_order(items)
+# 验证 calculate_total 只被调用一次，参数就是 items
 spy.assert_called_once_with(items)
 ```
 

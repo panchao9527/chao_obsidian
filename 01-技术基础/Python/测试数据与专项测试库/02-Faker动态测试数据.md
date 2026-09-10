@@ -16,25 +16,30 @@ Faker 可以生成姓名、地址、邮箱、日期等近似真实数据，适�
 ## 2. 安装
 
 ```powershell
+# 将 Faker 安装到当前虚拟环境
 python -m pip install Faker
 ```
 
 ## 3. 基础使用
 
 ```python
+# 导入 Faker 类
 from faker import Faker
 
+# zh_CN 表示生成中文地区风格的数据
 fake = Faker("zh_CN")
 
-print(fake.name())
-print(fake.address())
-print(fake.email())
+print(fake.name())     # 随机姓名
+print(fake.address())  # 随机地址
+print(fake.email())    # 随机邮箱格式
+# 生成年龄在 18 到 60 岁之间的出生日期
 print(fake.date_of_birth(minimum_age=18, maximum_age=60))
 ```
 
 ## 4. 唯一业务数据
 
 ```python
+# uuid4 用于生成碰撞概率极低的随机标识
 from uuid import uuid4
 from faker import Faker
 
@@ -42,7 +47,9 @@ fake = Faker("zh_CN")
 
 
 def build_user() -> dict:
+    # 取 UUID 前 10 位，让用户名和邮箱在并行执行时也尽量唯一
     suffix = uuid4().hex[:10]
+    # 返回可直接作为接口 JSON 请求体的字典
     return {
         "username": f"auto-{suffix}",
         "name": fake.name(),
@@ -57,6 +64,7 @@ def build_user() -> dict:
 ```python
 from faker import Faker
 
+# 固定随机种子后，每次运行会得到相同顺序的数据，便于复现失败
 Faker.seed(20260910)
 fake = Faker("zh_CN")
 print(fake.name())
@@ -73,11 +81,13 @@ from faker import Faker
 
 @pytest.fixture
 def fake():
+    # 每条使用该 fixture 的测试都会得到 Faker 对象
     return Faker("zh_CN")
 
 
 def test_user_name(fake):
     name = fake.name()
+    # strip 去掉首尾空格；空字符串会让断言失败
     assert name.strip()
 ```
 
@@ -90,10 +100,12 @@ from faker.providers import BaseProvider
 
 class BusinessProvider(BaseProvider):
     def task_type(self):
+        # 从允许的业务任务类型中随机选择一个
         return self.random_element(["PAYMENT", "INVOICE", "AUDIT"])
 
 
 fake = Faker()
+# 将自定义 Provider 注册到当前 Faker 对象
 fake.add_provider(BusinessProvider)
 print(fake.task_type())
 ```
